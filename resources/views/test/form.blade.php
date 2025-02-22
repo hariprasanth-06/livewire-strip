@@ -13,6 +13,7 @@
 <body>
     <h2>Stripe Payment</h2>
     <button id="checkout-button">Pay with Stripe</button>
+    <button id="refund-button">Refund with Stripe</button>
 
     <script>
         // Initialize Stripe
@@ -33,6 +34,27 @@
                                 alert("Payment Error: " + result.error.message);
                             }
                         });
+                    } else {
+                        console.error("Error: No session ID returned.");
+                        alert("Error: Unable to process checkout.");
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.error("AJAX Error:", error);
+                    alert("Error processing payment. Please try again.");
+                }
+            });
+        });
+
+        $("#refund-button").on("click", function() {
+            $.ajax({
+                url: "{{ route('payment.refund') }}",
+                type: "GET",
+                dataType: "json",
+                success: function(response) {
+                    if (response.id) {
+                        console.success("Error: No session ID returned.");
+                        alert("Error: Unable to process checkout.");
                     } else {
                         console.error("Error: No session ID returned.");
                         alert("Error: Unable to process checkout.");

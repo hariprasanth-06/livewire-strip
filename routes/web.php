@@ -24,4 +24,4 @@ Route::get('/form', function () {
 Route::get('/checkout', [FormController::class, 'checkout'])->name('payment.checkout');
 Route::get('/success', [FormController::class, 'success'])->name('payment.success');
 Route::get('/cancel', [FormController::class, 'cancel'])->name('payment.cancel');
-Route::get('/cancel', [FormController::class, 'cancel'])->name('payment.cancel');
+Route::get('/refund', [FormController::class, 'refundPayment'])->name('payment.refund');

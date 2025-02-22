@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Stripe\Charge;
+use Stripe\Refund;
 use Stripe\Stripe;
 use App\Models\User;
 use App\Models\Purchase;
@@ -13,13 +14,15 @@ use Stripe\Checkout\Session;
 class FormController extends Controller
 {
 
-    public $user;
     public function checkout(Request $request)
     {
         Stripe::setApiKey(config('services.stripe.secret'));
 
         $session = \Stripe\Checkout\Session::create([
             'payment_method_types' => ['card'],
+            'payment_intent_data' => [
+                'description' => 'description bug' // transaction description set
+            ],
             'line_items' => [[
                 'price_data' => [
                     'currency' => 'inr',
@@ -85,27 +88,38 @@ class FormController extends Controller
         return redirect()->route('payment.cancel')->with('error', 'Payment failed.');
     }
 
+
+    public function refundPayment()
+    {
+        Stripe::setApiKey(env('STRIPE_SECRET'));
+
+        try {
+            // Retrieve the PaymentIntent to get latest_charge
+            $paymentIntent = \Stripe\PaymentIntent::retrieve('pi_3QvK2RSC52cpFUia1XHX365s');
+            $chargeId = $paymentIntent->latest_charge;
+
+            // Process the refund
+            $refund = Refund::create([
+                'charge' => $chargeId, // Refunds need charge_id, not PaymentIntent
+                'amount' => 1, // Amount in paise/cents (e.g., ₹50.00 = 5000)
+                'reason' => 'requested_by_customer',
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Refund initiated successfully!',
+                'refund_id' => $refund->id,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Refund failed: ' . $e->getMessage(),
+            ]);
+        }
+    }
+
     public function cancel()
     {
         return "Payment canceled!";
-    }
-
-    public function Check()
-    {
-        $dataset = [
-            'name' => 'hari',
-            'email' => 'hari',
-            'name' => 'hari',
-        ];
-        $users = User::where('Country', '!=', 'Mexico')->update($dataset)->first();
-
-        return response()->json(
-            [
-                'status' => true,
-                'data'  => $users,
-                'message' => 'success',
-            ],
-            200
-        );
     }
 }
